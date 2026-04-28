@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:RetroWebSocketPOC}",
+      "name": "Debug RetroWebSocketPOC",
+      "target": "RetroWebSocketPOC",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug RetroWebSocketPOC"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:RetroWebSocketPOC}",
+      "name": "Release RetroWebSocketPOC",
+      "target": "RetroWebSocketPOC",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release RetroWebSocketPOC"
+    }
+  ]
+}
