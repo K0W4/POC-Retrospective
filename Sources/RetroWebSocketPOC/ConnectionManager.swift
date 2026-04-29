@@ -2,8 +2,6 @@
 //  ConnectionManager.swift
 //  RetroWebSocketPOC
 //
-//  Created by Gabriel Kowaleski on 27/04/26.
-//
 
 import Vapor
 
@@ -29,6 +27,18 @@ actor ConnectionManager {
         let count = rooms[roomID]?.count ?? 0
         let event = WSEvent(type: "room:info", payload: RoomInfo(usersCount: count))
         broadcast(event, toRoom: roomID)
+        
+        if let roomDiscussions = discussions[roomID], !roomDiscussions.isEmpty {
+            let historyEvent = WSEvent(type: "discussion:history", payload: roomDiscussions)
+            do {
+                let data = try JSONEncoder().encode(historyEvent)
+                if let message = String(data: data, encoding: .utf8) {
+                    connection.send(message)
+                }
+            } catch {
+                print("Erro ao enviar histórico para usuário: \(error)")
+            }
+        }
     }
 
     func remove(connection: WebSocket, fromRoom roomID: String) {
