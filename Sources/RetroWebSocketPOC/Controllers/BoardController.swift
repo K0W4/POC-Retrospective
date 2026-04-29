@@ -8,6 +8,7 @@
 import Vapor
 
 struct BoardController: RouteCollection {
+    
     let connectionManager: ConnectionManager
     
     func boot(routes: any RoutesBuilder) throws {
@@ -29,6 +30,13 @@ struct BoardController: RouteCollection {
     @Sendable
     func createRoom(req: Request) async throws -> RoomResponseDTO {
         let roomID = await connectionManager.createRoom()
+        
+        // Tenta encontrar o IP local para facilitar o log
+        let localIP = "Verifique o IP do seu Mac em Ajustes de Rede"
+        print("-----------------------------------------")
+        print("🚀 Sala Criada: \(roomID)")
+        print("-----------------------------------------")
+        
         return RoomResponseDTO(roomID: roomID)
     }
     
@@ -59,6 +67,7 @@ struct BoardController: RouteCollection {
         
         let event = WSEvent(type: "discussion:created", payload: discussion)
         await connectionManager.broadcast(event, toRoom: payload.roomID)
+        
         
         return try await discussion.encodeResponse(status: .created, for: req)
     }
