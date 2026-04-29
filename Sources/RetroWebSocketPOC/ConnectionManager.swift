@@ -8,9 +8,8 @@
 import Vapor
 
 actor ConnectionManager {
-    // Estado em memória
     private var rooms: [String: [WebSocket]] = [:]
-    private var discussions: [String: [Discussion]] = [:] // roomID -> Array de Discussões
+    private var discussions: [String: [Discussion]] = [:]
 
     func createRoom() -> String {
         let roomID = UUID().uuidString
@@ -50,7 +49,6 @@ actor ConnectionManager {
     }
     
     // MARK: - Gerenciamento de Discussões
-    
     func addDiscussion(_ discussion: Discussion, toRoom roomID: String) {
         discussions[roomID, default: []].append(discussion)
     }

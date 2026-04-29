@@ -7,49 +7,7 @@
 
 import Vapor
 
-
-// MARK: - Models & DTOs
-
-struct Discussion: Content {
-    let id: UUID
-    var question: String
-    var votedBy: [String]
-
-    var votes: Int {
-        votedBy.count
-    }
-    
-    init(id: UUID = UUID(), question: String, votedBy: [String] = []) {
-        self.id = id
-        self.question = question
-        self.votedBy = votedBy
-    }
-}
-
-// Estrutura genérica para os eventos do WebSocket
-struct WSEvent<Payload: Content>: Content {
-    let type: String
-    let payload: Payload
-}
-
-
-// Request Body para criar discussão
-struct CreateDiscussionRequest: Content {
-    let roomID: String
-    let question: String
-}
-
-// Request Body para votar
-struct VoteRequest: Content {
-    let roomID: String
-    let userID: String
-}
-
-
-// MARK: - Controller
-
 struct BoardController: RouteCollection {
-
     let connectionManager: ConnectionManager
     
     func boot(routes: any RoutesBuilder) throws {
@@ -69,9 +27,9 @@ struct BoardController: RouteCollection {
     }
     
     @Sendable
-    func createRoom(req: Request) async throws -> RoomResponse {
+    func createRoom(req: Request) async throws -> RoomResponseDTO {
         let roomID = await connectionManager.createRoom()
-        return RoomResponse(roomID: roomID)
+        return RoomResponseDTO(roomID: roomID)
     }
     
     @Sendable
@@ -94,7 +52,7 @@ struct BoardController: RouteCollection {
     
     @Sendable
     func createDiscussion(req: Request) async throws -> Response {
-        let payload = try req.content.decode(CreateDiscussionRequest.self)
+        let payload = try req.content.decode(CreateDiscussionDTO.self)
         let discussion = Discussion(question: payload.question)
         
         await connectionManager.addDiscussion(discussion, toRoom: payload.roomID)
@@ -112,10 +70,8 @@ struct BoardController: RouteCollection {
             throw Abort(.badRequest, reason: "ID da discussão inválido.")
         }
         
-        // Decodifica o body (roomID e userID)
-        let payload = try req.content.decode(VoteRequest.self)
+        let payload = try req.content.decode(VoteDTO.self)
         
-        // Registra o voto no connectionManager (retorna a discussão atualizada, se existir)
         guard let updatedDiscussion = await connectionManager.vote(
             discussionID: discussionID,
             roomID: payload.roomID,
@@ -124,11 +80,9 @@ struct BoardController: RouteCollection {
             throw Abort(.notFound, reason: "Discussão ou sala não encontrada.")
         }
         
-        // Propaga o evento via WebSocket
         let event = WSEvent(type: "discussion:voted", payload: updatedDiscussion)
         await connectionManager.broadcast(event, toRoom: payload.roomID)
         
-        // Retorna HTTP 200 com a discussão atualizada
         return try await updatedDiscussion.encodeResponse(status: .ok, for: req)
     }
 }

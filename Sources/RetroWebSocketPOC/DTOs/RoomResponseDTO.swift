@@ -7,6 +7,6 @@
 
 import Vapor
 
-struct RoomResponse: Content {
+struct RoomResponseDTO: Content {
     let roomID: String
 }
